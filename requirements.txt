@@ -1,0 +1,3 @@
+flask
+google-genai
+pip-system-certs

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Reality Checker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #09090b;
+            --card-bg: rgba(20, 20, 25, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            --glow-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --shimmer-bg: rgba(255, 255, 255, 0.05);
+            --shimmer-highlight: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="light"] {
+            --bg-page: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --border-color: rgba(0, 0, 0, 0.1);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --glow-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+            --shimmer-bg: rgba(0, 0, 0, 0.05);
+            --shimmer-highlight: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-page);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 3rem;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 650px;
+            text-align: center;
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Top gradient line */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-gradient);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-weight: 700;
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            font-weight: 300;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 1.2rem;
+            background: var(--shimmer-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            min-height: 120px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+            background: transparent;
+        }
+
+        textarea::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        button {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 2rem;
+            transition: all 0.3s ease;
+            box-shadow: var(--glow-shadow);
+            letter-spacing: 0.02em;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .result-card {
+            margin-top: 3rem;
+            text-align: left;
+            background: var(--shimmer-bg);
+            padding: 2rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dynamic Badge Styles */
+        .badge-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge.real { background: rgba(16, 185, 129, 0.2); color: var(--success-color); border: 1px solid var(--success-color); }
+        .badge.fake { background: rgba(239, 68, 68, 0.2); color: var(--danger-color); border: 1px solid var(--danger-color); }
+        .badge.unsure { background: rgba(245, 158, 11, 0.2); color: var(--warning-color); border: 1px solid var(--warning-color); }
+
+        .confidence-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .confidence-bar {
+            width: 100px;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: var(--accent-gradient);
+            width: 0%; /* Animated via JS */
+            transition: width 1s ease-out;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            line-height: 1.7;
+            margin-top: 0;
+            font-size: 1rem;
+        }
+
+        /* Highlight keys in the text */
+        strong {
+            color: #60a5fa;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .theme-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        /* Loading Shimmer */
+        .loading-container {
+            margin-top: 3rem;
+            text-align: left;
+        }
+        .skeleton-line {
+            height: 12px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            background: var(--shimmer-bg);
+            background-image: linear-gradient(
+                to right,
+                var(--shimmer-bg) 0%,
+                var(--shimmer-highlight) 20%,
+                var(--shimmer-bg) 40%,
+                var(--shimmer-bg) 100%
+            );
+            background-repeat: no-repeat;
+            background-size: 800px 100%; 
+            animation: shimmer 1.5s infinite linear; 
+        }
+        .skeleton-line.short { width: 40%; }
+        .skeleton-line.medium { width: 70%; }
+        .skeleton-line.long { width: 90%; }
+
+        @keyframes shimmer {
+            0% { background-position: -400px 0; }
+            100% { background-position: 400px 0; }
+        }
+
+        /* Micro-animations for text reveal */
+        .reveal-item {
+            opacity: 0;
+            animation: revealFade 0.5s ease forwards;
+        }
+        @keyframes revealFade {
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <button id="themeToggle" class="theme-toggle" title="Toggle Theme">
+        <!-- Sun Icon -->
+        <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <!-- Moon Icon -->
+        <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </button>
+
+    <div class="container">
+        <h1>Reality Checker</h1>
+        <p class="subtitle">Powered by Gemini 2.5 Flash</p>
+
+        <form method="POST" id="analysisForm">
+            <textarea name="claim" rows="5" placeholder="Paste a rumor, news headline, or claim here to verify..." required></textarea>
+            <button type="submit">Analyze Veracity</button>
+        </form>
+
+        <!-- Loading State (Hidden by default) -->
+        <div id="loadingState" class="loading-container" style="display: none;">
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line medium"></div>
+        </div>
+
+        {% if result %}
+            <div class="result-card">
+                <!-- Header injected by JS -->
+                <div id="dynamicHeader" class="badge-container reveal-item" style="display:none; animation-delay: 0.1s;">
+                    <span id="verdictBadge" class="badge">Analyzing...</span>
+                    <div class="confidence-wrapper">
+                        <span>Confidence</span>
+                        <div class="confidence-bar"><div id="confidenceFill" class="confidence-fill"></div></div>
+                        <span id="confidenceText">0%</span>
+                    </div>
+                </div>
+                
+                <!-- Main Text -->
+                <pre id="resultText" class="reveal-item" style="animation-delay: 0.2s;">{{ result }}</pre>
+            </div>
+
+            <script>
+                // Frontend Logic to parse the AI text and create a pretty UI
+                const text = document.getElementById('resultText').innerText;
+                const header = document.getElementById('dynamicHeader');
+                const badge = document.getElementById('verdictBadge');
+                const fill = document.getElementById('confidenceFill');
+                const confText = document.getElementById('confidenceText');
+
+                if (text) {
+                    header.style.display = 'flex';
+                    
+                    // 1. Detect Verdict
+                    const lowerText = text.toLowerCase();
+                    if (lowerText.includes('verdict: true') || lowerText.includes('verdict: mostly true')) {
+                        badge.innerText = "LIKELY REAL";
+                        badge.className = "badge real";
+                    } else if (lowerText.includes('verdict: false') || lowerText.includes('verdict: fake')) {
+                        badge.innerText = "LIKELY FAKE";
+                        badge.className = "badge fake";
+                    } else {
+                        badge.innerText = "UNCERTAIN / MIXED";
+                        badge.className = "badge unsure";
+                    }
+
+                    // 2. Detect Confidence
+                    // Looks for "Confidence: 85%" or similar
+                    const confMatch = text.match(/Confidence:\s*(\d+)%/i);
+                    if (confMatch && confMatch[1]) {
+                        const score = confMatch[1];
+                        setTimeout(() => {
+                            fill.style.width = score + "%";
+                        }, 300); // Small delay for animation
+                        confText.innerText = score + "%";
+                    }
+                }
+            </script>
+        {% endif %}
+
+        <script>
+            // Theme Toggle Logic
+            const toggleBtn = document.getElementById('themeToggle');
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const html = document.documentElement;
+
+            // Check saved theme
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            if (savedTheme === 'light') {
+                html.setAttribute('data-theme', 'light');
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+
+            toggleBtn.addEventListener('click', () => {
+                const currentTheme = html.getAttribute('data-theme');
+                if (currentTheme === 'light') {
+                    html.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'dark');
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'block';
+                } else {
+                    html.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                    sunIcon.style.display = 'block';
+                    moonIcon.style.display = 'none';
+                }
+            });
+
+            // Form Loading Logic
+            const form = document.getElementById('analysisForm');
+            const loader = document.getElementById('loadingState');
+            const resultCard = document.querySelector('.result-card');
+
+            form.addEventListener('submit', () => {
+                loader.style.display = 'block';
+                if (resultCard) resultCard.style.display = 'none';
+            });
+        </script>
+    </div>
+</body>
+</html>
